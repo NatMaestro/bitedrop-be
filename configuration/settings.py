@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
 import os, sys
 from dotenv import load_dotenv
 
@@ -30,9 +31,10 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 SECRET_KEY = "django-insecure-_*0a6i7v=ud$!ts#5r)kx0#$r@4s(a$a$vz2=phi$2z_0ymne3"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# --- SECURITY ---
+DEBUG = False
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', 'bitedrop.netlify.app',"bitedrop.onrender.com"]
 
-ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -78,8 +80,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
-
+#CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True  # or specify your frontend domain
+# Optional but helpful during dev:
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = "configuration.urls"
 
@@ -111,16 +115,29 @@ WSGI_APPLICATION = "configuration.wsgi.application"
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+# --- STATIC FILES ---
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# --- MIDDLEWARE ---
+MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
+if os.getenv('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+        }
+    }
 
 
 AUTH_USER_MODEL = 'user_account.User'
