@@ -124,10 +124,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 # Database configuration
-if os.getenv('DATABASE_URL'):
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
     # Production database (Render)
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
 else:
     # Local development database (PostgreSQL)
