@@ -125,12 +125,33 @@ MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
 # Database configuration
 DATABASE_URL = os.getenv('DATABASE_URL')
+print("DATABASE_URL:", DATABASE_URL)
+print("All env vars with DATABASE:", [k for k in os.environ.keys() if 'DATABASE' in k.upper()])
 
+# Try multiple approaches to get database config
 if DATABASE_URL:
     # Production database (Render)
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    }
+    try:
+        DATABASES = {
+            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        }
+        print("Using DATABASE_URL configuration")
+    except Exception as e:
+        print(f"Error parsing DATABASE_URL: {e}")
+        # Fallback to individual env vars
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': os.getenv('DB_NAME', 'bitedropDB'),
+                'USER': os.getenv('DB_USER', 'postgres'),
+                'PASSWORD': os.getenv('DB_PASSWORD', 'your_password'),
+                'HOST': os.getenv('DB_HOST', 'localhost'),
+                'PORT': os.getenv('DB_PORT', '5432'),
+                'OPTIONS': {
+                    'sslmode': 'disable', 
+                },
+            }
+        }
 else:
     # Local development database (PostgreSQL)
     DATABASES = {
@@ -146,6 +167,7 @@ else:
             },
         }
     }
+    print("Using local database configuration")
 
 
 
