@@ -28,12 +28,12 @@ sys.path.insert(0, os.path.join(BASE_DIR, 'apps'))
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-_*0a6i7v=ud$!ts#5r)kx0#$r@4s(a$a$vz2=phi$2z_0ymne3"
+SECRET_KEY = os.getenv('SECRET_KEY', "django-insecure-_*0a6i7v=ud$!ts#5r)kx0#$r@4s(a$a$vz2=phi$2z_0ymne3")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # --- SECURITY ---
-DEBUG = False
-ALLOWED_HOSTS = ['.onrender.com', 'localhost', 'bitedrop.netlify.app',"bitedrop.onrender.com"]
+DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'  # False in production, True in development
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1', 'bitedrop.netlify.app',"bitedrop.onrender.com"]
 
 
 
@@ -123,19 +123,26 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # --- MIDDLEWARE ---
 MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
 
+# Database configuration
 if os.getenv('DATABASE_URL'):
+    # Production database (Render)
     DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=False)
     }
 else:
+    # Local development database (PostgreSQL)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+            'NAME': os.getenv('DB_NAME', 'bitedropDB'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'your_password'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'OPTIONS': {
+                'sslmode': 'disable', 
+            },
+
         }
     }
 

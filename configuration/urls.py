@@ -65,6 +65,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # Root URL - redirect to Swagger
+    path("", schema_view.with_ui('swagger', cache_timeout=0), name='home'),
+    
     # Admin
     path("admin/", admin.site.urls),
     
