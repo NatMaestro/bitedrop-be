@@ -53,7 +53,7 @@ class Product(models.Model):
     @property
     def average_rating(self):
         """Calculate average rating from reviews"""
-        from review.models import Review
+        from apps.review.models import Review
         reviews = Review.objects.filter(product=self)
         if reviews.exists():
             return reviews.aggregate(models.Avg('rating'))['rating__avg'] or 0.00
@@ -62,5 +62,5 @@ class Product(models.Model):
     @property
     def total_reviews(self):
         """Get total number of reviews"""
-        from review.models import Review
+        from apps.review.models import Review
         return Review.objects.filter(product=self).count()

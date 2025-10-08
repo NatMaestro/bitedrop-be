@@ -1,0 +1,296 @@
+{
+  "baseUrl": "https://bitedrop.onrender.com",
+  "documentation": {
+    "swagger": "https://bitedrop.onrender.com/swagger/",
+    "redoc": "https://bitedrop.onrender.com/redoc/"
+  },
+  "endpoints": {
+    "authentication": {
+      "register": {
+        "method": "POST",
+        "url": "/api/users/register/",
+        "auth": false,
+        "body": {
+          "name": "string",
+          "email": "string",
+          "password": "string",
+          "phone": "string",
+          "address": "string"
+        }
+      },
+      "login": {
+        "method": "POST",
+        "url": "/api/users/login/",
+        "auth": false,
+        "body": {
+          "email": "string",
+          "password": "string"
+        }
+      },
+      "refreshToken": {
+        "method": "POST",
+        "url": "/api/users/token/refresh/",
+        "auth": false,
+        "body": {
+          "refresh": "string"
+        }
+      }
+    },
+    "users": {
+      "getCurrentUser": {
+        "method": "GET",
+        "url": "/api/users/me/",
+        "auth": true
+      },
+      "updateCurrentUser": {
+        "method": "PUT",
+        "url": "/api/users/me/",
+        "auth": true
+      },
+      "listUsers": {
+        "method": "GET",
+        "url": "/api/users/users/",
+        "auth": "admin"
+      }
+    },
+    "restaurants": {
+      "list": {
+        "method": "GET",
+        "url": "/api/restaurants/",
+        "auth": false,
+        "queryParams": ["is_partner", "search", "ordering", "page"]
+      },
+      "get": {
+        "method": "GET",
+        "url": "/api/restaurants/{id}/",
+        "auth": false
+      },
+      "getProducts": {
+        "method": "GET",
+        "url": "/api/restaurants/{id}/products/",
+        "auth": false
+      },
+      "getReviews": {
+        "method": "GET",
+        "url": "/api/restaurants/{id}/reviews/",
+        "auth": false
+      }
+    },
+    "products": {
+      "list": {
+        "method": "GET",
+        "url": "/api/products/",
+        "auth": false,
+        "queryParams": ["restaurant", "category", "is_flash_sale", "search", "ordering", "page"]
+      },
+      "get": {
+        "method": "GET",
+        "url": "/api/products/{id}/",
+        "auth": false
+      },
+      "flashSale": {
+        "method": "GET",
+        "url": "/api/products/flash_sale/",
+        "auth": false
+      },
+      "discounted": {
+        "method": "GET",
+        "url": "/api/products/discounted/",
+        "auth": false
+      }
+    },
+    "categories": {
+      "list": {
+        "method": "GET",
+        "url": "/api/categories/",
+        "auth": false
+      },
+      "get": {
+        "method": "GET",
+        "url": "/api/categories/{id}/",
+        "auth": false
+      }
+    },
+    "orders": {
+      "list": {
+        "method": "GET",
+        "url": "/api/orders/",
+        "auth": true,
+        "queryParams": ["status", "payment_status", "page"]
+      },
+      "create": {
+        "method": "POST",
+        "url": "/api/orders/",
+        "auth": true,
+        "body": {
+          "delivery_address": "string",
+          "delivery_fee": "number",
+          "payment_method": "string",
+          "notes": "string",
+          "items": [
+            {
+              "product": "uuid",
+              "quantity": "number",
+              "unit_price": "number"
+            }
+          ]
+        }
+      },
+      "get": {
+        "method": "GET",
+        "url": "/api/orders/{id}/",
+        "auth": true
+      },
+      "cancel": {
+        "method": "POST",
+        "url": "/api/orders/{id}/cancel/",
+        "auth": true
+      }
+    },
+    "discounts": {
+      "list": {
+        "method": "GET",
+        "url": "/api/discounts/",
+        "auth": false
+      },
+      "active": {
+        "method": "GET",
+        "url": "/api/discounts/active/",
+        "auth": false
+      },
+      "global": {
+        "method": "GET",
+        "url": "/api/discounts/global_discounts/",
+        "auth": false
+      }
+    },
+    "favorites": {
+      "list": {
+        "method": "GET",
+        "url": "/api/favorites/",
+        "auth": true
+      },
+      "add": {
+        "method": "POST",
+        "url": "/api/favorites/",
+        "auth": true,
+        "body": {
+          "type": "restaurant|product",
+          "restaurant": "uuid (if type=restaurant)",
+          "product": "uuid (if type=product)"
+        }
+      },
+      "remove": {
+        "method": "DELETE",
+        "url": "/api/favorites/{id}/",
+        "auth": true
+      },
+      "restaurants": {
+        "method": "GET",
+        "url": "/api/favorites/restaurants/",
+        "auth": true
+      },
+      "products": {
+        "method": "GET",
+        "url": "/api/favorites/products/",
+        "auth": true
+      }
+    },
+    "wallet": {
+      "balance": {
+        "method": "GET",
+        "url": "/api/wallet-transactions/balance/",
+        "auth": true
+      },
+      "transactions": {
+        "method": "GET",
+        "url": "/api/wallet-transactions/",
+        "auth": true
+      },
+      "earned": {
+        "method": "GET",
+        "url": "/api/wallet-transactions/earned/",
+        "auth": true
+      },
+      "redeemed": {
+        "method": "GET",
+        "url": "/api/wallet-transactions/redeemed/",
+        "auth": true
+      }
+    },
+    "notifications": {
+      "list": {
+        "method": "GET",
+        "url": "/api/notifications/",
+        "auth": true
+      },
+      "unread": {
+        "method": "GET",
+        "url": "/api/notifications/unread/",
+        "auth": true
+      },
+      "markAllRead": {
+        "method": "POST",
+        "url": "/api/notifications/mark_all_read/",
+        "auth": true
+      },
+      "markRead": {
+        "method": "POST",
+        "url": "/api/notifications/{id}/mark_read/",
+        "auth": true
+      }
+    },
+    "reviews": {
+      "list": {
+        "method": "GET",
+        "url": "/api/reviews/",
+        "auth": false
+      },
+      "create": {
+        "method": "POST",
+        "url": "/api/reviews/",
+        "auth": true,
+        "body": {
+          "product": "uuid (optional)",
+          "restaurant": "uuid (optional)",
+          "rating": "1-5",
+          "comment": "string"
+        }
+      },
+      "myReviews": {
+        "method": "GET",
+        "url": "/api/reviews/my_reviews/",
+        "auth": true
+      },
+      "highRated": {
+        "method": "GET",
+        "url": "/api/reviews/high_rated/",
+        "auth": false
+      }
+    },
+    "deliveryZones": {
+      "list": {
+        "method": "GET",
+        "url": "/api/delivery-zones/",
+        "auth": false
+      }
+    },
+    "paymentMethods": {
+      "list": {
+        "method": "GET",
+        "url": "/api/payment-methods/",
+        "auth": false
+      }
+    }
+  },
+  "statusCodes": {
+    "200": "OK - Request successful",
+    "201": "Created - Resource created successfully",
+    "204": "No Content - Resource deleted successfully",
+    "400": "Bad Request - Invalid request data",
+    "401": "Unauthorized - Authentication required",
+    "403": "Forbidden - Insufficient permissions",
+    "404": "Not Found - Resource not found",
+    "500": "Internal Server Error - Server error"
+  }
+}

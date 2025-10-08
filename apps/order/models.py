@@ -59,7 +59,7 @@ class Order(models.Model):
     @property
     def restaurants(self):
         """Get all restaurants involved in this order"""
-        from restaurant.models import Restaurant
+        from apps.restaurant.models import Restaurant
         return Restaurant.objects.filter(
             products__order_items__order=self
         ).distinct()
