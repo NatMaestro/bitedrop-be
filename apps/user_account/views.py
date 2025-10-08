@@ -108,6 +108,9 @@ class UserDetailView(generics.RetrieveUpdateAPIView):
 
 
 class LoginView(APIView):
+    authentication_classes = []  # 👈 make login public
+    permission_classes = []      # 👈 no auth required
+    
     @swagger_auto_schema(
         operation_summary="User login",
         operation_description="Authenticate user credentials and receive JWT tokens",
