@@ -28,6 +28,7 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     """Simplified serializer for list views"""
     restaurant = RestaurantListSerializer(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(read_only=True)  # Return category UUID
     is_discounted = serializers.ReadOnlyField()
     final_price = serializers.ReadOnlyField()
     
@@ -35,7 +36,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'discount_price',
-            'discount_percentage', 'image', 'restaurant', 'in_stock',
+            'discount_percentage', 'image', 'category', 'restaurant', 'in_stock',
             'is_flash_sale', 'rating', 'reviews_count', 'is_discounted',
             'final_price'
         ]
