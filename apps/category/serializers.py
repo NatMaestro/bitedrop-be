@@ -16,4 +16,4 @@ class CategoryListSerializer(serializers.ModelSerializer):
     """Simplified serializer for list views"""
     class Meta:
         model = Category
-        fields = ['id', 'name', 'description', 'icon']
+        fields = ['id', 'name', 'description', 'icon', 'is_active']
