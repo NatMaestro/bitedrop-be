@@ -8,7 +8,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing categories.
     """
-    queryset = Category.objects.filter(is_active=True)
+    queryset = Category.objects.all()  # Show all categories (admin can manage inactive ones)
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_active']
