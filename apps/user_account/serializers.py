@@ -40,6 +40,11 @@ class LoginSerializer(serializers.Serializer):
     refresh = serializers.CharField(read_only=True)
     id = serializers.IntegerField(read_only=True)
     name = serializers.CharField(read_only=True)
+    role = serializers.CharField(read_only=True)
+    phone = serializers.CharField(read_only=True, allow_blank=True)
+    address = serializers.CharField(read_only=True, allow_blank=True)
+    wallet_balance = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
+    loyalty_points = serializers.IntegerField(read_only=True)
 
     def validate(self, attrs):
         email = attrs.get('email')
