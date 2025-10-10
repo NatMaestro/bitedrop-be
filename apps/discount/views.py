@@ -10,7 +10,7 @@ class DiscountViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing discounts.
     """
-    queryset = Discount.objects.filter(is_active=True)
+    queryset = Discount.objects.all()  # Show all discounts for admin management
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['discount_type', 'restaurant', 'is_active']
