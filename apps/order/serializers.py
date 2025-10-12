@@ -47,14 +47,15 @@ class OrderSerializer(serializers.ModelSerializer):
 
 class OrderCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating orders"""
-    items = OrderItemCreateSerializer(many=True)
+    items = OrderItemCreateSerializer(many=True, write_only=True)
     
     class Meta:
         model = Order
         fields = [
-            'delivery_address', 'delivery_fee', 'payment_method',
-            'notes', 'items'
+            'id', 'delivery_address', 'delivery_fee', 'payment_method',
+            'notes', 'items', 'total', 'status', 'payment_status', 'created_at'
         ]
+        read_only_fields = ['id', 'total', 'status', 'payment_status', 'created_at']
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
