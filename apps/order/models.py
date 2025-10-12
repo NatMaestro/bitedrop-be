@@ -34,7 +34,7 @@ class Order(models.Model):
         on_delete=models.CASCADE,
         related_name='orders'
     )
-    total = models.DecimalField(max_digits=10, decimal_places=2)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     delivery_address = models.TextField()
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
