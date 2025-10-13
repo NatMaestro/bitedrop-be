@@ -44,16 +44,17 @@ def send_welcome_email(user, temporary_password):
         print(f"DEBUG: Email host: {settings.EMAIL_HOST}")
         print(f"DEBUG: From email: {settings.DEFAULT_FROM_EMAIL}")
         
+        # Use fail_silently=True to prevent blocking/timeouts
         result = send_mail(
             subject=subject,
             message=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,
-            fail_silently=False,
+            fail_silently=True,  # Changed to True to prevent timeouts
         )
         print(f"DEBUG: Email send result: {result}")
-        return True
+        return result == 1  # Return True if 1 email was sent
     except Exception as e:
         print(f"Failed to send welcome email to {user.email}: {e}")
         print(f"DEBUG: Email error details: {type(e).__name__}: {str(e)}")
