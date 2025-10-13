@@ -139,6 +139,7 @@ class UserViewSet(ModelViewSet):
         if role in ['restaurant_admin', 'staff']:
             from .utils import create_user_with_temporary_password
             
+            print(f"DEBUG: Creating {role} user via API")
             try:
                 # Extract restaurant if provided
                 restaurant_id = data.get('restaurant')
@@ -158,6 +159,7 @@ class UserViewSet(ModelViewSet):
                 )
                 
                 # Return user data with email status
+                print(f"DEBUG: User creation completed. Email sent: {email_sent}")
                 serializer = self.get_serializer(user)
                 return Response({
                     **serializer.data,
