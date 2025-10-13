@@ -30,6 +30,7 @@ class LoginSerializer(serializers.Serializer):
     role = serializers.CharField(read_only=True)
     phone = serializers.CharField(read_only=True, allow_blank=True)
     address = serializers.CharField(read_only=True, allow_blank=True)
+    restaurant = serializers.CharField(source="restaurant.id", read_only=True, allow_null=True)
     wallet_balance = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
     loyalty_points = serializers.IntegerField(read_only=True)
 

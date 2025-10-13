@@ -44,6 +44,7 @@ def login_view(request):
                     "role": user.role,
                     "phone": user.phone,
                     "address": user.address,
+                    "restaurant": user.restaurant.id if user.restaurant else None,
                     "wallet_balance": user.wallet_balance,
                     "loyalty_points": user.loyalty_points,
                 },
