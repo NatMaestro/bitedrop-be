@@ -135,6 +135,7 @@ class UserViewSet(ModelViewSet):
         role = data.get('role')
         
         # For restaurant_admin and staff roles, use auto-generated password
+        # For regular users, check if custom password is provided
         if role in ['restaurant_admin', 'staff']:
             from .utils import create_user_with_temporary_password
             
@@ -169,6 +170,51 @@ class UserViewSet(ModelViewSet):
                     {"error": f"Failed to create user: {str(e)}"}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        
+        elif role == 'user':
+            # For regular users, check if custom password is provided
+            custom_password = data.get('password')
+            if custom_password:
+                # Create user with custom password and send welcome email
+                from .utils import send_welcome_email
+                
+                user = User.objects.create_user(
+                    email=data['email'],
+                    name=data['name'],
+                    password=custom_password,
+                    role=role,
+                    phone=data.get('phone', ''),
+                    address=data.get('address', ''),
+                    must_change_password=False,  # Custom password doesn't require change
+                )
+                
+                # Send welcome email with custom password
+                email_sent = send_welcome_email(user, custom_password)
+                
+                serializer = self.get_serializer(user)
+                return Response({
+                    **serializer.data,
+                    'email_sent': email_sent,
+                    'message': f'User created successfully. Welcome email {"sent" if email_sent else "failed to send"}.'
+                }, status=status.HTTP_201_CREATED)
+            else:
+                # No custom password provided, use auto-generated
+                from .utils import create_user_with_temporary_password
+                
+                user, temp_password, email_sent = create_user_with_temporary_password(
+                    email=data['email'],
+                    name=data['name'],
+                    role=role,
+                    phone=data.get('phone'),
+                    address=data.get('address'),
+                )
+                
+                serializer = self.get_serializer(user)
+                return Response({
+                    **serializer.data,
+                    'email_sent': email_sent,
+                    'message': f'User created successfully. Welcome email {"sent" if email_sent else "failed to send"}.'
+                }, status=status.HTTP_201_CREATED)
         
         # For regular users, use the default creation process
         return super().create(request, *args, **kwargs)
