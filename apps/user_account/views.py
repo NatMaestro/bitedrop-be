@@ -1,254 +1,252 @@
-from rest_framework import generics, permissions, status, viewsets, filters
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken
-from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from .serializers import LoginSerializer, RegisterSerializer, UserSerializer
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import login
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import User
-
-class RegisterView(generics.CreateAPIView):
-    authentication_classes = []  # 👈 make registration public
-    permission_classes = []      # 👈 no auth required
-
-    @swagger_auto_schema(
-        operation_summary="Register a new user",
-        operation_description="Create a new user account and receive JWT tokens for authentication",
-        request_body=RegisterSerializer,
-        responses={
-            201: openapi.Response(
-                description="User registered successfully",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message'),
-                        'user': openapi.Schema(type=openapi.TYPE_OBJECT, description='User data'),
-                        'tokens': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'access': openapi.Schema(type=openapi.TYPE_STRING, description='JWT access token'),
-                                'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='JWT refresh token'),
-                            }
-                        )
-                    }
-                )
-            ),
-            400: openapi.Response(description="Bad request - validation errors")
-        },
-        tags=['Authentication']
-    )
-    def post(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            # Generate JWT tokens for the newly created user
-            refresh = RefreshToken.for_user(user=serializer.instance)
-
-            return Response({
-                "message": "Registration successful",
-                "user": serializer.data,
-                "tokens": {
-                    "refresh": str(refresh),
-                    "access": str(refresh.access_token),
-                }
-            }, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from .serializers import (
+    LoginSerializer,
+    RegisterSerializer,
+    UserSerializer,
+    UserListSerializer,
+    StaffCreateSerializer,
+    StaffSerializer,
+)
 
 
-class UserDetailView(generics.RetrieveUpdateAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+def login_view(request):
+    serializer = LoginSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.validated_data["user"]
+        login(request, user)
 
-    @swagger_auto_schema(
-        operation_summary="Get current user profile",
-        operation_description="Retrieve the authenticated user's profile information",
-        responses={
-            200: UserSerializer,
-            401: openapi.Response(description="Unauthorized - authentication required")
-        },
-        tags=['User Profile']
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        # Generate tokens
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        access_token = refresh.access_token
 
-    @swagger_auto_schema(
-        operation_summary="Update current user profile",
-        operation_description="Update the authenticated user's profile information",
-        request_body=UserSerializer,
-        responses={
-            200: UserSerializer,
-            400: openapi.Response(description="Bad request - validation errors"),
-            401: openapi.Response(description="Unauthorized - authentication required")
-        },
-        tags=['User Profile']
-    )
-    def put(self, request, *args, **kwargs):
-        return super().put(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Partially update current user profile",
-        operation_description="Partially update the authenticated user's profile information",
-        request_body=UserSerializer,
-        responses={
-            200: UserSerializer,
-            400: openapi.Response(description="Bad request - validation errors"),
-            401: openapi.Response(description="Unauthorized - authentication required")
-        },
-        tags=['User Profile']
-    )
-    def patch(self, request, *args, **kwargs):
-        return super().patch(request, *args, **kwargs)
-
-    def get_object(self):
-        return self.request.user
+        return Response(
+            {
+                "access": str(access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": user.id,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role,
+                    "phone": user.phone,
+                    "address": user.address,
+                    "wallet_balance": user.wallet_balance,
+                    "loyalty_points": user.loyalty_points,
+                },
+            }
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class LoginView(APIView):
-    authentication_classes = []  # 👈 make login public
-    permission_classes = []      # 👈 no auth required
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+def register_view(request):
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response(
+            {"message": "User created successfully"}, status=status.HTTP_201_CREATED
+        )
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def refresh_token_view(request):
+    from rest_framework_simplejwt.tokens import RefreshToken
     
-    @swagger_auto_schema(
-        operation_summary="User login",
-        operation_description="Authenticate user credentials and receive JWT tokens",
-        request_body=LoginSerializer,
-        responses={
-            200: openapi.Response(
-                description="Login successful",
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message'),
-                        'user': openapi.Schema(type=openapi.TYPE_OBJECT, description='User data'),
-                        'tokens': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'access': openapi.Schema(type=openapi.TYPE_STRING, description='JWT access token'),
-                                'refresh': openapi.Schema(type=openapi.TYPE_STRING, description='JWT refresh token'),
-                            }
-                        )
-                    }
-                )
-            ),
-            400: openapi.Response(description="Bad request - invalid credentials")
-        },
-        tags=['Authentication']
-    )
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            return Response({
-                "message": "Login successful",
-                "user": {k: v for k, v in serializer.data.items() if k not in ["refresh", "access"]},
-                "tokens": {
-                    "refresh": serializer.data["refresh"],
-                    "access": serializer.data["access"],
-                }
-            }, status=status.HTTP_200_OK)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    refresh_token = request.data.get("refresh")
+    if not refresh_token:
+        return Response(
+            {"error": "Refresh token is required"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        refresh = RefreshToken(refresh_token)
+        access_token = refresh.access_token
+        
+        return Response({
+            "access": str(access_token),
+            "refresh": str(refresh),
+        })
+    except Exception as e:
+        return Response(
+            {"error": "Invalid refresh token"}, 
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing users.
-    """
+class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['role', 'is_active']
-    search_fields = ['name', 'email', 'phone']
-    ordering_fields = ['name', 'email', 'date_joined', 'created_at']
-    ordering = ['-created_at']
+    permission_classes = [IsAuthenticated]
 
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.action == 'list':
-            # Only staff can list all users
-            permission_classes = [permissions.IsAdminUser]
-        elif self.action == 'create':
-            # Anyone can register (handled by RegisterView)
-            permission_classes = [permissions.AllowAny]
-        else:
-            # Users can view/edit their own profile, staff can view/edit any
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
+    def get_serializer_class(self):
+        if self.action == "list":
+            return UserListSerializer
+        return UserSerializer
 
     def get_queryset(self):
-        """Return users based on permissions"""
-        if self.request.user.is_staff:
+        user = self.request.user
+        
+        # Super admin can see all users
+        if user.role == "admin" or user.is_superuser:
             return User.objects.all()
+        
+        # Restaurant admin can see users from their restaurant
+        elif user.role == "restaurant_admin" and user.restaurant:
+            return User.objects.filter(restaurant=user.restaurant)
+        
+        # Staff can only see themselves
+        elif user.role == "staff":
+            return User.objects.filter(id=user.id)
+        
+        # Regular users can only see themselves
         else:
-            # Non-staff users can only see their own profile
-            return User.objects.filter(id=self.request.user.id)
+            return User.objects.filter(id=user.id)
 
-    @swagger_auto_schema(
-        operation_summary="List all users",
-        operation_description="Get a list of all users (admin only)",
-        responses={
-            200: UserSerializer(many=True),
-            403: openapi.Response(description="Forbidden - admin access required")
-        },
-        tags=['User Management']
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def create(self, request, *args, **kwargs):
+        # Only admin and restaurant_admin can create users
+        if request.user.role not in ["admin", "restaurant_admin"]:
+            return Response(
+                {"error": "Permission denied"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().create(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Get user details",
-        operation_description="Get details of a specific user",
-        responses={
-            200: UserSerializer,
-            404: openapi.Response(description="User not found"),
-            403: openapi.Response(description="Forbidden - insufficient permissions")
-        },
-        tags=['User Management']
-    )
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Update user",
-        operation_description="Update user information",
-        request_body=UserSerializer,
-        responses={
-            200: UserSerializer,
-            400: openapi.Response(description="Bad request - validation errors"),
-            403: openapi.Response(description="Forbidden - insufficient permissions")
-        },
-        tags=['User Management']
-    )
     def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        current_user = request.user
+        
+        # Users can only update themselves, unless they're admin
+        if current_user.role not in ["admin", "restaurant_admin"] and user.id != current_user.id:
+            return Response(
+                {"error": "Permission denied"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         return super().update(request, *args, **kwargs)
 
-    @swagger_auto_schema(
-        operation_summary="Partially update user",
-        operation_description="Partially update user information",
-        request_body=UserSerializer,
-        responses={
-            200: UserSerializer,
-            400: openapi.Response(description="Bad request - validation errors"),
-            403: openapi.Response(description="Forbidden - insufficient permissions")
-        },
-        tags=['User Management']
-    )
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
-
-    @swagger_auto_schema(
-        operation_summary="Delete user",
-        operation_description="Delete a user account (admin only)",
-        responses={
-            204: openapi.Response(description="User deleted successfully"),
-            403: openapi.Response(description="Forbidden - admin access required")
-        },
-        tags=['User Management']
-    )
     def destroy(self, request, *args, **kwargs):
+        # Only admin can delete users
+        if request.user.role != "admin" and not request.user.is_superuser:
+            return Response(
+                {"error": "Permission denied"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
         return super().destroy(request, *args, **kwargs)
+
+
+class StaffViewSet(ModelViewSet):
+    serializer_class = StaffSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        
+        # Only restaurant_admin can manage staff
+        if user.role == "restaurant_admin" and user.restaurant:
+            return User.objects.filter(
+                restaurant=user.restaurant, 
+                role="staff"
+            )
+        
+        # Admin can see all staff
+        elif user.role == "admin" or user.is_superuser:
+            return User.objects.filter(role="staff")
+        
+        return User.objects.none()
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return StaffCreateSerializer
+        return StaffSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Only restaurant_admin can create staff
+        if request.user.role != "restaurant_admin":
+            return Response(
+                {"error": "Only restaurant admins can create staff members"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if not request.user.restaurant:
+            return Response(
+                {"error": "Restaurant admin must be associated with a restaurant"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        staff_member = serializer.save()
+        
+        # Return the created staff member using StaffSerializer
+        response_serializer = StaffSerializer(staff_member)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, *args, **kwargs):
+        staff_member = self.get_object()
+        current_user = request.user
+        
+        # Only restaurant_admin can update their staff
+        if current_user.role != "restaurant_admin":
+            return Response(
+                {"error": "Permission denied"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Ensure staff member belongs to the same restaurant
+        if staff_member.restaurant != current_user.restaurant:
+            return Response(
+                {"error": "Cannot update staff from different restaurant"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Handle password update
+        password = request.data.get("password")
+        if password:
+            staff_member.set_password(password)
+            staff_member.save()
+        
+        # Update other fields
+        serializer = self.get_serializer(staff_member, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response(serializer.data)
+
+    def destroy(self, request, *args, **kwargs):
+        staff_member = self.get_object()
+        current_user = request.user
+        
+        # Only restaurant_admin can delete their staff
+        if current_user.role != "restaurant_admin":
+            return Response(
+                {"error": "Permission denied"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Ensure staff member belongs to the same restaurant
+        if staff_member.restaurant != current_user.restaurant:
+            return Response(
+                {"error": "Cannot delete staff from different restaurant"}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        staff_member.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
