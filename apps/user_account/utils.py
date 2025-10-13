@@ -39,7 +39,12 @@ def send_welcome_email(user, temporary_password):
     plain_message = render_to_string('emails/welcome_email.txt', context)
     
     try:
-        send_mail(
+        print(f"DEBUG: Attempting to send email to {user.email}")
+        print(f"DEBUG: Email backend: {settings.EMAIL_BACKEND}")
+        print(f"DEBUG: Email host: {settings.EMAIL_HOST}")
+        print(f"DEBUG: From email: {settings.DEFAULT_FROM_EMAIL}")
+        
+        result = send_mail(
             subject=subject,
             message=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
@@ -47,9 +52,11 @@ def send_welcome_email(user, temporary_password):
             html_message=html_message,
             fail_silently=False,
         )
+        print(f"DEBUG: Email send result: {result}")
         return True
     except Exception as e:
         print(f"Failed to send welcome email to {user.email}: {e}")
+        print(f"DEBUG: Email error details: {type(e).__name__}: {str(e)}")
         return False
 
 
