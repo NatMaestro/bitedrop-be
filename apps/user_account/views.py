@@ -123,62 +123,63 @@ class UserViewSet(ModelViewSet):
             return User.objects.filter(id=user.id)
 
     def create(self, request, *args, **kwargs):
-        # Only admin and restaurant_admin can create users
-        if request.user.role not in ["admin", "restaurant_admin"]:
-            return Response(
-                {"error": "Permission denied"}, 
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Get the data
-        data = request.data.copy()
-        role = data.get('role')
-        
-        # For restaurant_admin and staff roles, use auto-generated password
-        # For regular users, check if custom password is provided
-        if role in ['restaurant_admin', 'staff']:
-            from .utils import create_user_with_temporary_password
-            
-            print(f"DEBUG: Creating {role} user via API")
-            try:
-                # Extract restaurant if provided
-                restaurant_id = data.get('restaurant')
-                restaurant = None
-                if restaurant_id:
-                    from apps.restaurant.models import Restaurant
-                    restaurant = Restaurant.objects.get(id=restaurant_id)
-                
-                # Create user with auto-generated password
-                user, temp_password, email_sent = create_user_with_temporary_password(
-                    email=data['email'],
-                    name=data['name'],
-                    role=role,
-                    restaurant=restaurant,
-                    phone=data.get('phone'),
-                    address=data.get('address'),
+        try:
+            # Only admin and restaurant_admin can create users
+            if request.user.role not in ["admin", "restaurant_admin"]:
+                return Response(
+                    {"error": "Permission denied"}, 
+                    status=status.HTTP_403_FORBIDDEN
                 )
+        
+            # Get the data
+            data = request.data.copy()
+            role = data.get('role')
+            
+            # For restaurant_admin and staff roles, use auto-generated password
+            # For regular users, check if custom password is provided
+            if role in ['restaurant_admin', 'staff']:
+                from .utils import create_user_with_temporary_password
                 
-                # Return user data with email status
-                print(f"DEBUG: User creation completed. Email sent: {email_sent}")
-                serializer = self.get_serializer(user)
-                return Response({
-                    **serializer.data,
-                    'email_sent': email_sent,
-                    'message': f'User created successfully. Welcome email {"sent" if email_sent else "failed to send"}.'
-                }, status=status.HTTP_201_CREATED)
-                
-            except Exception as e:
-                error_message = str(e)
-                # Handle specific database errors
-                if "duplicate key value violates unique constraint" in error_message and "email" in error_message:
+                print(f"DEBUG: Creating {role} user via API")
+                try:
+                    # Extract restaurant if provided
+                    restaurant_id = data.get('restaurant')
+                    restaurant = None
+                    if restaurant_id:
+                        from apps.restaurant.models import Restaurant
+                        restaurant = Restaurant.objects.get(id=restaurant_id)
+                    
+                    # Create user with auto-generated password
+                    user, temp_password, email_sent = create_user_with_temporary_password(
+                        email=data['email'],
+                        name=data['name'],
+                        role=role,
+                        restaurant=restaurant,
+                        phone=data.get('phone'),
+                        address=data.get('address'),
+                    )
+                    
+                    # Return user data with email status
+                    print(f"DEBUG: User creation completed. Email sent: {email_sent}")
+                    serializer = self.get_serializer(user)
+                    return Response({
+                        **serializer.data,
+                        'email_sent': email_sent,
+                        'message': f'User created successfully. Welcome email {"sent" if email_sent else "failed to send"}.'
+                    }, status=status.HTTP_201_CREATED)
+                    
+                except Exception as e:
+                    error_message = str(e)
+                    # Handle specific database errors
+                    if "duplicate key value violates unique constraint" in error_message and "email" in error_message:
+                        return Response(
+                            {"error": "A user with this email address already exists. Please use a different email."}, 
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
                     return Response(
-                        {"error": "A user with this email address already exists. Please use a different email."}, 
+                        {"error": f"Failed to create user: {error_message}"}, 
                         status=status.HTTP_400_BAD_REQUEST
                     )
-                return Response(
-                    {"error": f"Failed to create user: {error_message}"}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
         
         elif role == 'user':
             # For regular users, check if custom password is provided
@@ -238,8 +239,14 @@ class UserViewSet(ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
-        # For regular users, use the default creation process
-        return super().create(request, *args, **kwargs)
+            # For regular users, use the default creation process
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print(f"DEBUG: Unexpected error in create method: {str(e)}")
+            return Response(
+                {"error": f"Unexpected error: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     def update(self, request, *args, **kwargs):
         user = self.get_object()
