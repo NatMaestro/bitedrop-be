@@ -12,7 +12,7 @@ from .views import (
 # Create router for ViewSets
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
-router.register(r'staff', StaffViewSet)
+router.register(r'staff', StaffViewSet, basename='staff')
 
 urlpatterns = [
     path('', include(router.urls)),
