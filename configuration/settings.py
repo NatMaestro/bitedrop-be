@@ -278,3 +278,6 @@ REDOC_SETTINGS = {
     'PATH_IN_MIDDLE': True,
 }
 
+# Frontend URL for email templates
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+
