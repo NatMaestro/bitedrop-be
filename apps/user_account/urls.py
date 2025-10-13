@@ -5,6 +5,7 @@ from .views import (
     login_view, 
     register_view, 
     refresh_token_view,
+    force_password_change_view,
     UserViewSet, 
     StaffViewSet
 )
@@ -19,4 +20,5 @@ urlpatterns = [
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('token/refresh/', refresh_token_view, name='token_refresh'),
+    path('force-password-change/', force_password_change_view, name='force_password_change'),
 ]

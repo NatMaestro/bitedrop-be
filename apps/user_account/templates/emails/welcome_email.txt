@@ -1,0 +1,35 @@
+Welcome to BiteDrop!
+
+Hello {{ user_name }}!
+
+Your account has been successfully created. Here are your login credentials:
+
+==========================================
+🔑 Your Login Credentials
+==========================================
+
+Email: {{ user_email }}
+Temporary Password: {{ temporary_password }}
+Role: {{ user_role }}
+{% if restaurant_name %}Restaurant: {{ restaurant_name }}{% endif %}
+
+==========================================
+
+⚠️ IMPORTANT: You must change your password on your first login for security reasons.
+
+Login URL: {{ login_url }}
+
+Next Steps:
+1. Visit {{ login_url }}
+2. Enter your email and temporary password
+3. You'll be prompted to change your password
+4. Once you've set a new password, you'll have full access to your dashboard
+
+If you have any questions or need assistance, please don't hesitate to contact our support team.
+
+Best regards,
+The BiteDrop Team
+
+---
+This email was sent automatically. Please do not reply to this email.
+© 2024 BiteDrop. All rights reserved.

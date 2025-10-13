@@ -15,6 +15,7 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     UserListSerializer,
+    PasswordChangeSerializer,
     StaffCreateSerializer,
     StaffSerializer,
 )
@@ -128,6 +129,48 @@ class UserViewSet(ModelViewSet):
                 {"error": "Permission denied"}, 
                 status=status.HTTP_403_FORBIDDEN
             )
+        
+        # Get the data
+        data = request.data.copy()
+        role = data.get('role')
+        
+        # For restaurant_admin and staff roles, use auto-generated password
+        if role in ['restaurant_admin', 'staff']:
+            from .utils import create_user_with_temporary_password
+            
+            try:
+                # Extract restaurant if provided
+                restaurant_id = data.get('restaurant')
+                restaurant = None
+                if restaurant_id:
+                    from apps.restaurant.models import Restaurant
+                    restaurant = Restaurant.objects.get(id=restaurant_id)
+                
+                # Create user with auto-generated password
+                user, temp_password, email_sent = create_user_with_temporary_password(
+                    email=data['email'],
+                    name=data['name'],
+                    role=role,
+                    restaurant=restaurant,
+                    phone=data.get('phone'),
+                    address=data.get('address'),
+                )
+                
+                # Return user data with email status
+                serializer = self.get_serializer(user)
+                return Response({
+                    **serializer.data,
+                    'email_sent': email_sent,
+                    'message': f'User created successfully. Welcome email {"sent" if email_sent else "failed to send"}.'
+                }, status=status.HTTP_201_CREATED)
+                
+            except Exception as e:
+                return Response(
+                    {"error": f"Failed to create user: {str(e)}"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # For regular users, use the default creation process
         return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
@@ -251,3 +294,35 @@ class StaffViewSet(ModelViewSet):
         
         staff_member.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def force_password_change_view(request):
+    """
+    Endpoint for forced password change on first login.
+    """
+    user = request.user
+    
+    # Check if user actually needs to change password
+    if not user.must_change_password:
+        return Response(
+            {"detail": "Password change not required"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    serializer = PasswordChangeSerializer(data=request.data)
+    if serializer.is_valid():
+        new_password = serializer.validated_data['new_password']
+        
+        # Update password and clear the flag
+        user.set_password(new_password)
+        user.must_change_password = False
+        user.save()
+        
+        return Response({
+            "detail": "Password changed successfully",
+            "must_change_password": False
+        })
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

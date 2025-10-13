@@ -33,6 +33,7 @@ class LoginSerializer(serializers.Serializer):
     restaurant = serializers.CharField(source="restaurant.id", read_only=True, allow_null=True)
     wallet_balance = serializers.DecimalField(read_only=True, max_digits=10, decimal_places=2)
     loyalty_points = serializers.IntegerField(read_only=True)
+    must_change_password = serializers.BooleanField(read_only=True)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -67,6 +68,7 @@ class UserSerializer(serializers.ModelSerializer):
             "restaurant",
             "wallet_balance",
             "loyalty_points",
+            "must_change_password",
             "is_active",
             "date_joined",
             "created_at",
@@ -96,9 +98,27 @@ class UserListSerializer(serializers.ModelSerializer):
             "phone",
             "restaurant",
             "restaurant_name",
+            "must_change_password",
             "is_active",
             "date_joined",
         ]
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """
+    Serializer for forced password change on first login.
+    """
+    new_password = serializers.CharField(write_only=True, validators=[validate_password])
+    new_password_confirm = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        new_password = attrs.get('new_password')
+        new_password_confirm = attrs.get('new_password_confirm')
+
+        if new_password != new_password_confirm:
+            raise serializers.ValidationError("New passwords don't match.")
+
+        return attrs
 
 
 class StaffCreateSerializer(serializers.ModelSerializer):

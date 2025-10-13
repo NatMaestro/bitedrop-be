@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to BiteDrop</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .credentials-box {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credential-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        .credential-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .credential-value {
+            font-family: monospace;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .warning-icon {
+            font-size: 18px;
+            margin-right: 8px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🍽️ Welcome to BiteDrop!</h1>
+        <p>Your account has been successfully created</p>
+    </div>
+    
+    <div class="content">
+        <h2>Hello {{ user_name }}!</h2>
+        
+        <p>Welcome to BiteDrop! Your account has been created with the following details:</p>
+        
+        <div class="credentials-box">
+            <h3>🔑 Your Login Credentials</h3>
+            <div class="credential-item">
+                <span class="credential-label">Email:</span>
+                <span class="credential-value">{{ user_email }}</span>
+            </div>
+            <div class="credential-item">
+                <span class="credential-label">Temporary Password:</span>
+                <span class="credential-value">{{ temporary_password }}</span>
+            </div>
+            <div class="credential-item">
+                <span class="credential-label">Role:</span>
+                <span class="credential-value">{{ user_role }}</span>
+            </div>
+            {% if restaurant_name %}
+            <div class="credential-item">
+                <span class="credential-label">Restaurant:</span>
+                <span class="credential-value">{{ restaurant_name }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="warning">
+            <span class="warning-icon">⚠️</span>
+            <strong>IMPORTANT:</strong> You must change your password on your first login for security reasons.
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ login_url }}" class="cta-button">Login to BiteDrop</a>
+        </div>
+        
+        <h3>Next Steps:</h3>
+        <ol>
+            <li>Click the login button above or visit <a href="{{ login_url }}">{{ login_url }}</a></li>
+            <li>Enter your email and temporary password</li>
+            <li>You'll be prompted to change your password</li>
+            <li>Once you've set a new password, you'll have full access to your dashboard</li>
+        </ol>
+        
+        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+        
+        <p>Best regards,<br>
+        <strong>The BiteDrop Team</strong></p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent automatically. Please do not reply to this email.</p>
+        <p>&copy; 2024 BiteDrop. All rights reserved.</p>
+    </div>
+</body>
+</html>
