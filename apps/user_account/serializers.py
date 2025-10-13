@@ -84,6 +84,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserListSerializer(serializers.ModelSerializer):
     restaurant_name = serializers.CharField(source="restaurant.name", read_only=True)
+    restaurant = serializers.CharField(source="restaurant.id", read_only=True, allow_null=True)
 
     class Meta:
         model = User
@@ -93,6 +94,7 @@ class UserListSerializer(serializers.ModelSerializer):
             "name",
             "role",
             "phone",
+            "restaurant",
             "restaurant_name",
             "is_active",
             "date_joined",
