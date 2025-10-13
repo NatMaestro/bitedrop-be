@@ -22,12 +22,15 @@ def send_welcome_email(user, temporary_password):
     subject = f"Welcome to BiteDrop - Your Account Details"
     
     # Email context
+    # Get frontend URL from settings or use a default
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+    
     context = {
         'user_name': user.name,
         'user_email': user.email,
         'user_role': user.get_role_display(),
         'temporary_password': temporary_password,
-        'login_url': f"{settings.FRONTEND_URL}/auth",
+        'login_url': f"{frontend_url}/auth",
         'restaurant_name': user.restaurant.name if user.restaurant else None,
     }
     
