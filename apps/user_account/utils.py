@@ -66,7 +66,7 @@ def send_welcome_email(user, temporary_password):
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
             html_message=html_message,
-            fail_silently=False,  # Changed back to False to see actual errors
+            fail_silently=True,  # Set to True to prevent 500 errors from email failures
         )
         print(f"DEBUG: Email send result: {result}")
         
