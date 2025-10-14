@@ -465,16 +465,31 @@ def test_user_creation(request):
                         status=status.HTTP_400_BAD_REQUEST
                     )
             
-            # Create user with auto-generated password
+            # Create user with auto-generated password (simplified for testing)
             try:
-                user, temp_password, email_sent = create_user_with_temporary_password(
+                from .utils import generate_secure_password
+                from .models import User
+                
+                print("DEBUG: Starting user creation...")
+                temporary_password = generate_secure_password()
+                print(f"DEBUG: Generated password: {temporary_password}")
+                
+                user = User.objects.create_user(
                     email=data['email'],
                     name=data['name'],
+                    password=temporary_password,
                     role=role,
                     restaurant=restaurant,
-                    phone=data.get('phone'),
-                    address=data.get('address'),
+                    phone=data.get('phone', ''),
+                    address=data.get('address', ''),
+                    must_change_password=True,
                 )
+                print(f"DEBUG: User created successfully: {user.id}")
+                
+                # Skip email sending for now to isolate the issue
+                email_sent = False
+                print("DEBUG: Skipping email sending for testing")
+                
             except Exception as user_creation_error:
                 print(f"DEBUG: User creation failed: {user_creation_error}")
                 import traceback
