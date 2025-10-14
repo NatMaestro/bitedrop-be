@@ -401,8 +401,14 @@ def force_password_change_view(request):
     """
     user = request.user
     
+    # Debug logging
+    print(f"DEBUG: Force password change request from user: {user.email}")
+    print(f"DEBUG: User must_change_password: {user.must_change_password}")
+    print(f"DEBUG: Request data: {request.data}")
+    
     # Check if user actually needs to change password
     if not user.must_change_password:
+        print(f"DEBUG: Password change not required for user {user.email}")
         return Response(
             {"detail": "Password change not required"}, 
             status=status.HTTP_400_BAD_REQUEST

@@ -98,6 +98,7 @@ def create_user_with_temporary_password(email, name, role, restaurant=None, phon
     temporary_password = generate_secure_password()
     
     # Create user with must_change_password flag
+    print(f"DEBUG: Creating user {email} with must_change_password=True")
     user = User.objects.create_user(
         email=email,
         name=name,
@@ -108,6 +109,7 @@ def create_user_with_temporary_password(email, name, role, restaurant=None, phon
         address=address or "",
         must_change_password=True,  # Force password change on first login
     )
+    print(f"DEBUG: User created with must_change_password: {user.must_change_password}")
     
     # Send welcome email
     email_sent = send_welcome_email(user, temporary_password)
