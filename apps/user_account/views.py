@@ -127,6 +127,13 @@ class UserViewSet(ModelViewSet):
         else:
             return User.objects.filter(id=user.id)
 
+    def me(self, request):
+        """
+        Get current user information
+        """
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+
     def create(self, request, *args, **kwargs):
         try:
             print("DEBUG: Starting user creation process")

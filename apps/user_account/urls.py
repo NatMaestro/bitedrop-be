@@ -20,6 +20,7 @@ router.register(r'staff', StaffViewSet, basename='staff')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('users/me/', UserViewSet.as_view({'get': 'me'}), name='user-me'),
     path('register/', register_view, name='register'),
     path('login/', login_view, name='login'),
     path('token/refresh/', refresh_token_view, name='token_refresh'),
