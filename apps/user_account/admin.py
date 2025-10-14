@@ -47,43 +47,12 @@ class UserAdmin(BaseUserAdmin):
         """
         is_new_user = not change  # True if creating a new user
         
-        if is_new_user and obj.role in ['restaurant_admin', 'staff']:
-            # For restaurant_admin and staff, we need to handle this specially
-            # because Django admin creates the user with a password we don't know
-            # So we'll delete the user and recreate with our email system
-            obj.delete()  # Delete the user created by Django admin
-            
-            # Recreate using our system that sends emails
-            try:
-                user, temp_password, email_sent = create_user_with_temporary_password(
-                    email=form.cleaned_data['email'],
-                    name=form.cleaned_data['name'],
-                    role=form.cleaned_data['role'],
-                    restaurant=getattr(obj, 'restaurant', None),
-                    phone=getattr(obj, 'phone', ''),
-                    address=getattr(obj, 'address', ''),
-                )
-                
-                if email_sent:
-                    messages.success(request, f'User created successfully. Welcome email sent to {user.email}.')
-                else:
-                    messages.warning(request, f'User created successfully but welcome email failed to send to {user.email}.')
-                    
-            except Exception as e:
-                messages.error(request, f'Error creating user: {str(e)}')
-                # Recreate the user without email sending as fallback
-                super().save_model(request, obj, form, change)
+        # Always use normal Django admin behavior for user creation
+        super().save_model(request, obj, form, change)
+        
+        # Skip email sending for now to fix the 500 error
+        # TODO: Re-enable email sending once the core user creation is working
+        if is_new_user:
+            messages.success(request, f'User created successfully. Email sending disabled for debugging.')
         else:
-            # For regular users or existing users, use normal Django admin behavior
-            super().save_model(request, obj, form, change)
-            
-            # Send welcome email for new regular users if they have a custom password
-            if is_new_user and obj.role == 'user' and form.cleaned_data.get('password1'):
-                try:
-                    email_sent = send_welcome_email(obj, form.cleaned_data['password1'])
-                    if email_sent:
-                        messages.success(request, f'User created successfully. Welcome email sent to {obj.email}.')
-                    else:
-                        messages.warning(request, f'User created successfully but welcome email failed to send to {obj.email}.')
-                except Exception as e:
-                    messages.warning(request, f'User created but email sending failed: {str(e)}')
+            messages.success(request, f'User updated successfully.')
