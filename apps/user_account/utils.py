@@ -47,6 +47,11 @@ def send_welcome_email(user, temporary_password):
         resend_api_key = getattr(settings, 'EMAIL_HOST_PASSWORD', None)
         if not resend_api_key:
             print("WARNING: No Resend API key configured (EMAIL_HOST_PASSWORD), email will not be sent")
+        
+        # Get Resend API key from settings
+        resend_api_key = getattr(settings, 'EMAIL_HOST_PASSWORD', None)
+        if not resend_api_key:
+            print("WARNING: No Resend API key configured (EMAIL_HOST_PASSWORD), email will not be sent")
             return False
             
         print("DEBUG: Using Resend API to send email...")
@@ -71,13 +76,19 @@ def send_welcome_email(user, temporary_password):
         
         if response.status_code == 200:
             result = response.json()
+        if response.status_code == 200:
+            result = response.json()
             print(f"✅ Welcome email sent successfully to {user.email}")
+            print(f"DEBUG: Email ID: {result.get('id', 'Unknown')}")
             print(f"DEBUG: Email ID: {result.get('id', 'Unknown')}")
             return True
         else:
             print(f"❌ Resend API error: {response.status_code} - {response.text}")
+            print(f"❌ Resend API error: {response.status_code} - {response.text}")
             return False
             
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Network error sending email to {user.email}: {e}")
     except requests.exceptions.RequestException as e:
         print(f"❌ Network error sending email to {user.email}: {e}")
         return False
