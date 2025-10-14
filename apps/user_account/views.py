@@ -505,9 +505,14 @@ def test_user_creation(request):
             
     except Exception as e:
         import traceback
-        print(f"DEBUG: Error in test user creation: {str(e)}")
-        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        error_message = str(e)
+        traceback_info = traceback.format_exc()
+        print(f"DEBUG: Error in test user creation: {error_message}")
+        print(f"DEBUG: Traceback: {traceback_info}")
         return Response(
-            {"error": f"Failed to create user: {str(e)}"}, 
+            {
+                "error": f"Failed to create user: {error_message}",
+                "traceback": traceback_info
+            }, 
             status=status.HTTP_400_BAD_REQUEST
         )
