@@ -132,8 +132,22 @@ print("All env vars with DATABASE:", [k for k in os.environ.keys() if 'DATABASE'
 if DATABASE_URL:
     # Production database (Render)
     try:
+        # Parse DATABASE_URL with additional connection options for Neon
+        db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=600, conn_health_checks=True)
+        
+        # Add additional connection options for better reliability
+        db_config['OPTIONS'] = db_config.get('OPTIONS', {})
+        db_config['OPTIONS'].update({
+            'connect_timeout': 30,
+            'application_name': 'bitedrop_django',
+        })
+        
+        # Add connection pooling for better reliability
+        db_config['CONN_MAX_AGE'] = 300  # 5 minutes
+        db_config['CONN_HEALTH_CHECKS'] = True
+        
         DATABASES = {
-            'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+            'default': db_config
         }
         print("Using DATABASE_URL configuration")
     except Exception as e:
