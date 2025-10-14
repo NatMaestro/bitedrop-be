@@ -50,3 +50,4 @@ class Command(BaseCommand):
                 self.style.ERROR(f'Error sending email: {e}')
             )
             self.stdout.write("Please check your email configuration and try again.")
+
