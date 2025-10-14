@@ -281,13 +281,36 @@ REDOC_SETTINGS = {
 # Frontend URL for email templates
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
-# Email Configuration
+# Email Configuration - Using Resend for cloud compatibility
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
-EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.resend.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'resend')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@bitedrop.com')
-EMAIL_TIMEOUT = 10  # 10 second timeout to prevent long waits
+EMAIL_TIMEOUT = 30  # Increased timeout for cloud services
+EMAIL_USE_SSL = False  # Use TLS instead of SSL for port 587
+
+# Email debugging
+EMAIL_DEBUG = os.environ.get('EMAIL_DEBUG', 'False').lower() == 'true'
+
+# Alternative email backends for different environments
+if DEBUG and EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+    # In development, emails will be printed to console
+    print("📧 EMAIL DEBUG: Using console backend - emails will be printed to console")
+elif not EMAIL_HOST_PASSWORD:
+    # Fallback to console if credentials are missing
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("⚠️ EMAIL WARNING: No Resend API key found, using console backend")
+else:
+    if EMAIL_HOST == 'smtp.resend.com':
+        print(f"📧 EMAIL: Using Resend SMTP backend with API key")
+    else:
+        print(f"📧 EMAIL: Using SMTP backend with {EMAIL_HOST_USER}")
+
+# Log email configuration (without password)
+if EMAIL_DEBUG:
+    print(f"📧 EMAIL CONFIG: Backend={EMAIL_BACKEND}, Host={EMAIL_HOST}, Port={EMAIL_PORT}")
+    print(f"📧 EMAIL CONFIG: TLS={EMAIL_USE_TLS}, User={EMAIL_HOST_USER}, From={DEFAULT_FROM_EMAIL}")
 
