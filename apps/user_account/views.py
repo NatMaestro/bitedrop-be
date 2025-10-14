@@ -124,8 +124,15 @@ class UserViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
+            print("DEBUG: Starting user creation process")
+            print(f"DEBUG: Request method: {request.method}")
+            print(f"DEBUG: Request user: {request.user}")
+            print(f"DEBUG: Request user role: {getattr(request.user, 'role', 'No role')}")
+            print(f"DEBUG: Request data keys: {list(request.data.keys())}")
+            
             # Only admin and restaurant_admin can create users
             if request.user.role not in ["admin", "restaurant_admin"]:
+                print("DEBUG: Permission denied - user role not authorized")
                 return Response(
                     {"error": "Permission denied"}, 
                     status=status.HTTP_403_FORBIDDEN
@@ -134,6 +141,7 @@ class UserViewSet(ModelViewSet):
             # Get the data
             data = request.data.copy()
             role = data.get('role')
+            print(f"DEBUG: User role to create: {role}")
             
             # For restaurant_admin and staff roles, use auto-generated password
             # For regular users, check if custom password is provided
