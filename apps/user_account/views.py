@@ -130,6 +130,7 @@ class UserViewSet(ModelViewSet):
     def me(self, request):
         """
         Get current user information
+        Force deployment
         """
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
