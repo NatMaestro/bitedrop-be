@@ -158,7 +158,13 @@ class UserViewSet(ModelViewSet):
                     restaurant = None
                     if restaurant_id:
                         from apps.restaurant.models import Restaurant
-                        restaurant = Restaurant.objects.get(id=restaurant_id)
+                        try:
+                            restaurant = Restaurant.objects.get(id=restaurant_id)
+                        except Restaurant.DoesNotExist:
+                            return Response(
+                                {"error": f"Restaurant with ID {restaurant_id} does not exist"}, 
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
                     
                     # Create user with auto-generated password
                     user, temp_password, email_sent = create_user_with_temporary_password(
@@ -425,3 +431,74 @@ def test_endpoint(request):
     """
     from django.utils import timezone
     return Response({"message": "Server is working", "timestamp": timezone.now()}, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
+def test_user_creation(request):
+    """
+    Test endpoint for user creation without authentication
+    Only for debugging purposes
+    """
+    try:
+        print("DEBUG: Test user creation endpoint called")
+        print(f"DEBUG: Request data: {request.data}")
+        
+        data = request.data.copy()
+        role = data.get('role')
+        print(f"DEBUG: Role to create: {role}")
+        
+        if role in ['restaurant_admin', 'staff']:
+            from .utils import create_user_with_temporary_password
+            
+            # Extract restaurant if provided
+            restaurant_id = data.get('restaurant')
+            restaurant = None
+            if restaurant_id:
+                from apps.restaurant.models import Restaurant
+                try:
+                    restaurant = Restaurant.objects.get(id=restaurant_id)
+                    print(f"DEBUG: Restaurant found: {restaurant.name}")
+                except Restaurant.DoesNotExist:
+                    return Response(
+                        {"error": f"Restaurant with ID {restaurant_id} does not exist"}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            # Create user with auto-generated password
+            user, temp_password, email_sent = create_user_with_temporary_password(
+                email=data['email'],
+                name=data['name'],
+                role=role,
+                restaurant=restaurant,
+                phone=data.get('phone'),
+                address=data.get('address'),
+            )
+            
+            print(f"DEBUG: User created successfully. Email sent: {email_sent}")
+            
+            return Response({
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "role": user.role,
+                "restaurant": str(user.restaurant.id) if user.restaurant else None,
+                "must_change_password": user.must_change_password,
+                "email_sent": email_sent,
+                "message": f'User created successfully. Welcome email {"sent" if email_sent else "failed to send"}.'
+            }, status=status.HTTP_201_CREATED)
+        
+        else:
+            return Response(
+                {"error": "Only restaurant_admin and staff roles are supported in test endpoint"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+    except Exception as e:
+        import traceback
+        print(f"DEBUG: Error in test user creation: {str(e)}")
+        print(f"DEBUG: Traceback: {traceback.format_exc()}")
+        return Response(
+            {"error": f"Failed to create user: {str(e)}"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )

@@ -7,6 +7,7 @@ from .views import (
     refresh_token_view,
     force_password_change_view,
     test_endpoint,
+    test_user_creation,
     UserViewSet, 
     StaffViewSet
 )
@@ -23,4 +24,5 @@ urlpatterns = [
     path('token/refresh/', refresh_token_view, name='token_refresh'),
     path('force-password-change/', force_password_change_view, name='force_password_change'),
     path('test/', test_endpoint, name='test'),
+    path('test-user-creation/', test_user_creation, name='test_user_creation'),
 ]
