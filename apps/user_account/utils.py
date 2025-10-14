@@ -56,7 +56,7 @@ def send_welcome_email(user, temporary_password):
             "https://api.resend.com/emails",
             headers={"Authorization": f"Bearer {resend_api_key}"},
             json={
-                "from": "BiteDrop <noreply@bitedrop.app>",
+                "from": "BiteDrop <noreply@resend.dev>",
                 "to": [user.email],
                 "subject": subject,
                 "html": html_message,
