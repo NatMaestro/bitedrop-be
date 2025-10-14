@@ -404,3 +404,13 @@ def force_password_change_view(request):
         })
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(["GET"])
+@permission_classes([permissions.AllowAny])
+def test_endpoint(request):
+    """
+    Simple test endpoint to check if the server is working.
+    """
+    from django.utils import timezone
+    return Response({"message": "Server is working", "timestamp": timezone.now()}, status=status.HTTP_200_OK)
