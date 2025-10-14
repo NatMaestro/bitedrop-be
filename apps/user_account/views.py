@@ -14,6 +14,7 @@ from .serializers import (
     LoginSerializer,
     RegisterSerializer,
     UserSerializer,
+    UserCreateSerializer,
     UserListSerializer,
     PasswordChangeSerializer,
     StaffCreateSerializer,
@@ -57,8 +58,8 @@ def login_view(request):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def register_view(request):
-    serializer = RegisterSerializer(data=request.data)
-    if serializer.is_valid():
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
         user = serializer.save()
         return Response(
             {"message": "User created successfully"}, status=status.HTTP_201_CREATED
@@ -82,9 +83,9 @@ def refresh_token_view(request):
         refresh = RefreshToken(refresh_token)
         access_token = refresh.access_token
 
-        return Response({
+            return Response({
             "access": str(access_token),
-            "refresh": str(refresh),
+                    "refresh": str(refresh),
         })
     except Exception as e:
         return Response(
@@ -101,6 +102,8 @@ class UserViewSet(ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return UserListSerializer
+        elif self.action == "create":
+            return UserCreateSerializer
         return UserSerializer
 
     def get_queryset(self):

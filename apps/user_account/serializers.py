@@ -55,6 +55,38 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=False)
+    
+    class Meta:
+        model = User
+        fields = [
+            "id",
+            "email",
+            "name",
+            "role",
+            "password",
+            "phone",
+            "address",
+            "restaurant",
+            "wallet_balance",
+            "loyalty_points",
+            "must_change_password",
+            "is_active",
+            "date_joined",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "wallet_balance",
+            "loyalty_points",
+            "date_joined",
+            "created_at",
+            "updated_at",
+        ]
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
