@@ -43,30 +43,60 @@ class UserAdmin(BaseUserAdmin):
     
     def save_model(self, request, obj, form, change):
         """
-        Override save_model to send welcome emails for new users
+        Override save_model to send welcome emails for new users and handle restaurant roles
         """
         is_new_user = not change  # True if creating a new user
         
-        # Always use normal Django admin behavior for user creation
-        super().save_model(request, obj, form, change)
-        
-        # Send welcome email for new users
-        if is_new_user:
+        if is_new_user and obj.role in ['restaurant_admin', 'staff']:
+            # For restaurant roles, use the proper function with must_change_password=True
             try:
-                # Get the password from the form
                 password = form.cleaned_data.get('password1') or form.cleaned_data.get('password')
-                
-                if password:
-                    # Send welcome email with the password
+                if not password:
+                    # Generate a temporary password
+                    from .utils import create_user_with_temporary_password
+                    user, temp_password, email_sent = create_user_with_temporary_password(
+                        email=obj.email,
+                        name=obj.name,
+                        role=obj.role,
+                        restaurant=obj.restaurant,
+                        phone=obj.phone,
+                        address=obj.address,
+                    )
+                    messages.success(request, f'Restaurant {obj.role} created successfully. Welcome email {"sent" if email_sent else "failed to send"} to {obj.email}.')
+                    return  # Exit early, user already created
+                else:
+                    # User provided a password, but we still need to set must_change_password=True
+                    super().save_model(request, obj, form, change)
+                    obj.must_change_password = True
+                    obj.save()
+                    
+                    # Send welcome email
                     email_sent = send_welcome_email(obj, password)
                     if email_sent:
-                        messages.success(request, f'User created successfully. Welcome email sent to {obj.email}.')
+                        messages.success(request, f'Restaurant {obj.role} created successfully. Welcome email sent to {obj.email}.')
                     else:
-                        messages.warning(request, f'User created successfully but welcome email failed to send to {obj.email}.')
-                else:
-                    messages.success(request, f'User created successfully. No password provided for email.')
-                    
+                        messages.warning(request, f'Restaurant {obj.role} created successfully but welcome email failed to send to {obj.email}.')
+                        
             except Exception as e:
-                messages.warning(request, f'User created successfully but email sending failed: {str(e)}')
+                messages.error(request, f'Failed to create restaurant {obj.role}: {str(e)}')
         else:
-            messages.success(request, f'User updated successfully.')
+            # Normal user creation/update
+            super().save_model(request, obj, form, change)
+            
+            # Send welcome email for new users with custom passwords
+            if is_new_user:
+                try:
+                    password = form.cleaned_data.get('password1') or form.cleaned_data.get('password')
+                    if password:
+                        email_sent = send_welcome_email(obj, password)
+                        if email_sent:
+                            messages.success(request, f'User created successfully. Welcome email sent to {obj.email}.')
+                        else:
+                            messages.warning(request, f'User created successfully but welcome email failed to send to {obj.email}.')
+                    else:
+                        messages.success(request, f'User created successfully. No password provided for email.')
+                        
+                except Exception as e:
+                    messages.warning(request, f'User created successfully but email sending failed: {str(e)}')
+            else:
+                messages.success(request, f'User updated successfully.')
