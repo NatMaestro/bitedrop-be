@@ -1,0 +1,84 @@
+[1mdiff --git a/apps/user_account/views.py b/apps/user_account/views.py[m
+[1mindex ab2eca9..cf70f04 100644[m
+[1m--- a/apps/user_account/views.py[m
+[1m+++ b/apps/user_account/views.py[m
+[36m@@ -58,8 +58,8 @@[m [mdef login_view(request):[m
+ @api_view(["POST"])[m
+ @permission_classes([permissions.AllowAny])[m
+ def register_view(request):[m
+[31m-    serializer = RegisterSerializer(data=request.data)[m
+[31m-    if serializer.is_valid():[m
+[32m+[m[32m        serializer = RegisterSerializer(data=request.data)[m
+[32m+[m[32m        if serializer.is_valid():[m
+         user = serializer.save()[m
+         return Response([m
+             {"message": "User created successfully"}, status=status.HTTP_201_CREATED[m
+[36m@@ -83,9 +83,9 @@[m [mdef refresh_token_view(request):[m
+         refresh = RefreshToken(refresh_token)[m
+         access_token = refresh.access_token[m
+ [m
+[31m-        return Response({[m
+[32m+[m[32m            return Response({[m
+             "access": str(access_token),[m
+[31m-            "refresh": str(refresh),[m
+[32m+[m[32m                    "refresh": str(refresh),[m
+         })[m
+     except Exception as e:[m
+         return Response([m
+[36m@@ -407,7 +407,7 @@[m [mdef force_password_change_view(request):[m
+         )[m
+     [m
+     serializer = PasswordChangeSerializer(data=request.data)[m
+[31m-    if serializer.is_valid():[m
+[32m+[m[32m        if serializer.is_valid():[m
+         new_password = serializer.validated_data['new_password'][m
+         [m
+         # Update password and clear the flag[m
+[36m@@ -415,12 +415,12 @@[m [mdef force_password_change_view(request):[m
+         user.must_change_password = False[m
+         user.save()[m
+         [m
+[31m-        return Response({[m
+[32m+[m[32m            return Response({[m
+             "detail": "Password changed successfully",[m
+             "must_change_password": False[m
+         })[m
+[31m-    [m
+[31m-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)[m
+[32m+[m
+[32m+[m[32m        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)[m
+ [m
+ [m
+ @api_view(["GET"])[m
+[36m@@ -466,14 +466,23 @@[m [mdef test_user_creation(request):[m
+                     )[m
+             [m
+             # Create user with auto-generated password[m
+[31m-            user, temp_password, email_sent = create_user_with_temporary_password([m
+[31m-                email=data['email'],[m
+[31m-                name=data['name'],[m
+[31m-                role=role,[m
+[31m-                restaurant=restaurant,[m
+[31m-                phone=data.get('phone'),[m
+[31m-                address=data.get('address'),[m
+[31m-            )[m
+[32m+[m[32m            try:[m
+[32m+[m[32m                user, temp_password, email_sent = create_user_with_temporary_password([m
+[32m+[m[32m                    email=data['email'],[m
+[32m+[m[32m                    name=data['name'],[m
+[32m+[m[32m                    role=role,[m
+[32m+[m[32m                    restaurant=restaurant,[m
+[32m+[m[32m                    phone=data.get('phone'),[m
+[32m+[m[32m                    address=data.get('address'),[m
+[32m+[m[32m                )[m
+[32m+[m[32m            except Exception as user_creation_error:[m
+[32m+[m[32m                print(f"DEBUG: User creation failed: {user_creation_error}")[m
+[32m+[m[32m                import traceback[m
+[32m+[m[32m                print(f"DEBUG: User creation traceback: {traceback.format_exc()}")[m
+[32m+[m[32m                return Response([m
+[32m+[m[32m                    {"error": f"Failed to create user: {str(user_creation_error)}"},[m[41m [m
+[32m+[m[32m                    status=status.HTTP_400_BAD_REQUEST[m
+[32m+[m[32m                )[m
+             [m
+             print(f"DEBUG: User created successfully. Email sent: {email_sent}")[m
+             [m

@@ -43,16 +43,30 @@ class UserAdmin(BaseUserAdmin):
     
     def save_model(self, request, obj, form, change):
         """
-        Override save_model to send welcome emails for restaurant_admin and staff roles
+        Override save_model to send welcome emails for new users
         """
         is_new_user = not change  # True if creating a new user
         
         # Always use normal Django admin behavior for user creation
         super().save_model(request, obj, form, change)
         
-        # Skip email sending for now to fix the 500 error
-        # TODO: Re-enable email sending once the core user creation is working
+        # Send welcome email for new users
         if is_new_user:
-            messages.success(request, f'User created successfully. Email sending disabled for debugging.')
+            try:
+                # Get the password from the form
+                password = form.cleaned_data.get('password1') or form.cleaned_data.get('password')
+                
+                if password:
+                    # Send welcome email with the password
+                    email_sent = send_welcome_email(obj, password)
+                    if email_sent:
+                        messages.success(request, f'User created successfully. Welcome email sent to {obj.email}.')
+                    else:
+                        messages.warning(request, f'User created successfully but welcome email failed to send to {obj.email}.')
+                else:
+                    messages.success(request, f'User created successfully. No password provided for email.')
+                    
+            except Exception as e:
+                messages.warning(request, f'User created successfully but email sending failed: {str(e)}')
         else:
             messages.success(request, f'User updated successfully.')
