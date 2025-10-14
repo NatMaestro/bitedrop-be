@@ -35,8 +35,14 @@ def send_welcome_email(user, temporary_password):
     }
     
     # Render HTML email template
-    html_message = render_to_string('emails/welcome_email.html', context)
-    plain_message = render_to_string('emails/welcome_email.txt', context)
+    try:
+        print("DEBUG: Rendering email templates...")
+        html_message = render_to_string('emails/welcome_email.html', context)
+        plain_message = render_to_string('emails/welcome_email.txt', context)
+        print("DEBUG: Email templates rendered successfully")
+    except Exception as template_error:
+        print(f"DEBUG: Template rendering error: {template_error}")
+        raise template_error
     
     try:
         print(f"DEBUG: Attempting to send email to {user.email}")

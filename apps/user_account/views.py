@@ -57,8 +57,8 @@ def login_view(request):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def register_view(request):
-    serializer = RegisterSerializer(data=request.data)
-    if serializer.is_valid():
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
         user = serializer.save()
         return Response(
             {"message": "User created successfully"}, status=status.HTTP_201_CREATED
@@ -81,10 +81,10 @@ def refresh_token_view(request):
     try:
         refresh = RefreshToken(refresh_token)
         access_token = refresh.access_token
-        
-        return Response({
+
+            return Response({
             "access": str(access_token),
-            "refresh": str(refresh),
+                    "refresh": str(refresh),
         })
     except Exception as e:
         return Response(
@@ -242,7 +242,10 @@ class UserViewSet(ModelViewSet):
             # For regular users, use the default creation process
             return super().create(request, *args, **kwargs)
         except Exception as e:
+            import traceback
             print(f"DEBUG: Unexpected error in create method: {str(e)}")
+            print(f"DEBUG: Error type: {type(e).__name__}")
+            print(f"DEBUG: Traceback: {traceback.format_exc()}")
             return Response(
                 {"error": f"Unexpected error: {str(e)}"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
