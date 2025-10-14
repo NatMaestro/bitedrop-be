@@ -443,6 +443,59 @@ def test_endpoint(request):
 
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
+def fix_user_password_flag(request):
+    """
+    Fix user's must_change_password flag
+    Only for debugging purposes - should be removed in production
+    """
+    email = request.data.get('email')
+    
+    if not email:
+        return Response(
+            {"error": "Email is required"}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        print(f"DEBUG: Fixing user {email}")
+        print(f"DEBUG: Current must_change_password: {user.must_change_password}")
+        
+        if user.must_change_password:
+            return Response({
+                "message": f"User {email} already has must_change_password=True",
+                "must_change_password": True
+            })
+        
+        # Set the flag to True
+        user.must_change_password = True
+        user.save()
+        
+        print(f"DEBUG: Updated must_change_password to True for {email}")
+        
+        return Response({
+            "message": f"Successfully updated must_change_password to True for {email}",
+            "email": email,
+            "role": user.role,
+            "must_change_password": True
+        })
+        
+    except User.DoesNotExist:
+        return Response(
+            {"error": f"User with email {email} not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        print(f"DEBUG: Error fixing user: {str(e)}")
+        return Response(
+            {"error": f"Failed to fix user: {str(e)}"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["POST"])
+@permission_classes([permissions.AllowAny])
 def test_user_creation(request):
     """
     Test endpoint for user creation without authentication

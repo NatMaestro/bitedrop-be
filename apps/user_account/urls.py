@@ -8,6 +8,7 @@ from .views import (
     force_password_change_view,
     test_endpoint,
     test_user_creation,
+    fix_user_password_flag,
     UserViewSet, 
     StaffViewSet
 )
@@ -25,4 +26,5 @@ urlpatterns = [
     path('force-password-change/', force_password_change_view, name='force_password_change'),
     path('test/', test_endpoint, name='test'),
     path('test-user-creation/', test_user_creation, name='test_user_creation'),
+    path('fix-user-password/', fix_user_password_flag, name='fix_user_password_flag'),
 ]
