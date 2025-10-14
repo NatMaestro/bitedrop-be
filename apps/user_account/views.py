@@ -473,18 +473,27 @@ def test_user_creation(request):
                 print("DEBUG: Starting user creation...")
                 temporary_password = generate_secure_password()
                 print(f"DEBUG: Generated password: {temporary_password}")
+                print(f"DEBUG: Restaurant: {restaurant}")
                 
+                # Try creating user step by step
+                print("DEBUG: Creating user object...")
                 user = User.objects.create_user(
                     email=data['email'],
                     name=data['name'],
                     password=temporary_password,
                     role=role,
-                    restaurant=restaurant,
                     phone=data.get('phone', ''),
                     address=data.get('address', ''),
                     must_change_password=True,
                 )
                 print(f"DEBUG: User created successfully: {user.id}")
+                
+                # Assign restaurant separately
+                if restaurant:
+                    print("DEBUG: Assigning restaurant...")
+                    user.restaurant = restaurant
+                    user.save()
+                    print("DEBUG: Restaurant assigned successfully")
                 
                 # Skip email sending for now to isolate the issue
                 email_sent = False
