@@ -19,32 +19,28 @@ def send_welcome_email(user, temporary_password):
     """
     Send welcome email to newly created restaurant admin or staff.
     """
-    subject = f"Welcome to BiteDrop - Your Account Details"
-    
-    # Email context
-    # Get frontend URL from settings or use a default
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
-    
-    context = {
-        'user_name': user.name,
-        'user_email': user.email,
-        'user_role': user.role,
-        'temporary_password': temporary_password,
-        'login_url': f"{frontend_url}/auth",
-        'restaurant_name': user.restaurant.name if user.restaurant else None,
-    }
-    
-    # Render HTML email template
     try:
+        print(f"DEBUG: Starting email sending for user: {user.email}")
+        subject = f"Welcome to BiteDrop - Your Account Details"
+        
+        # Email context
+        # Get frontend URL from settings or use a default
+        frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:3000')
+        
+        context = {
+            'user_name': user.name,
+            'user_email': user.email,
+            'user_role': user.role,
+            'temporary_password': temporary_password,
+            'login_url': f"{frontend_url}/auth",
+            'restaurant_name': user.restaurant.name if user.restaurant and hasattr(user.restaurant, 'name') else None,
+        }
+        
+        # Render HTML email template
         print("DEBUG: Rendering email templates...")
         html_message = render_to_string('emails/welcome_email.html', context)
         plain_message = render_to_string('emails/welcome_email.txt', context)
         print("DEBUG: Email templates rendered successfully")
-    except Exception as template_error:
-        print(f"DEBUG: Template rendering error: {template_error}")
-        raise template_error
-    
-    try:
         print(f"DEBUG: Attempting to send email to {user.email}")
         print(f"DEBUG: Email backend: {settings.EMAIL_BACKEND}")
         print(f"DEBUG: Email host: {settings.EMAIL_HOST}")
@@ -96,6 +92,12 @@ def send_welcome_email(user, temporary_password):
         else:
             print(f"💡 Unknown error - check Resend dashboard for more details")
         
+        return False
+        
+    except Exception as e:
+        print(f"DEBUG: Email sending failed with exception: {str(e)}")
+        import traceback
+        print(f"DEBUG: Email sending traceback: {traceback.format_exc()}")
         return False
 
 
