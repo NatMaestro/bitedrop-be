@@ -50,6 +50,7 @@ def login_view(request):
                     "restaurant": user.restaurant.id if user.restaurant else None,
                     "wallet_balance": user.wallet_balance,
                     "loyalty_points": user.loyalty_points,
+                    "must_change_password": user.must_change_password,
                 },
             }
         )
