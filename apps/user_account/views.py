@@ -58,9 +58,9 @@ def login_view(request):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def register_view(request):
-        serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-        user = serializer.save()
+    serializer = RegisterSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
         return Response(
             {"message": "User created successfully"}, status=status.HTTP_201_CREATED
         )
@@ -83,9 +83,9 @@ def refresh_token_view(request):
         refresh = RefreshToken(refresh_token)
         access_token = refresh.access_token
 
-            return Response({
+        return Response({
             "access": str(access_token),
-                    "refresh": str(refresh),
+            "refresh": str(refresh),
         })
     except Exception as e:
         return Response(
@@ -407,7 +407,7 @@ def force_password_change_view(request):
         )
     
     serializer = PasswordChangeSerializer(data=request.data)
-        if serializer.is_valid():
+    if serializer.is_valid():
         new_password = serializer.validated_data['new_password']
         
         # Update password and clear the flag
@@ -415,12 +415,12 @@ def force_password_change_view(request):
         user.must_change_password = False
         user.save()
         
-            return Response({
+        return Response({
             "detail": "Password changed successfully",
             "must_change_password": False
         })
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
