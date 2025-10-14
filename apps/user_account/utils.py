@@ -28,7 +28,7 @@ def send_welcome_email(user, temporary_password):
     context = {
         'user_name': user.name,
         'user_email': user.email,
-        'user_role': user.get_role_display(),
+        'user_role': user.role,
         'temporary_password': temporary_password,
         'login_url': f"{frontend_url}/auth",
         'restaurant_name': user.restaurant.name if user.restaurant else None,
