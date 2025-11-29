@@ -130,3 +130,4 @@ If you're migrating from another email service:
 5. **Monitor email delivery** in Resend dashboard
 
 **Resend is the perfect email service for BiteDrop - simple, reliable, and developer-friendly!** 🚀
+

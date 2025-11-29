@@ -18,11 +18,38 @@ class OrderViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        """Return orders for the authenticated user"""
-        if self.request.user.is_authenticated:
-            return Order.objects.filter(user=self.request.user)
-        else:
+        """
+        Filter orders based on user role for multi-tenant support.
+        - Super admin: sees all orders
+        - Restaurant admin: sees orders containing products from their restaurant
+        - Staff: sees orders containing products from their restaurant
+        - Regular users: see only their own orders
+        """
+        user = self.request.user
+        
+        if not user.is_authenticated:
             return Order.objects.none()
+        
+        # Super admin sees all orders
+        if user.role == 'admin' or user.is_superuser:
+            return Order.objects.all()
+        
+        # Restaurant admin sees orders for their restaurant
+        elif user.role == 'restaurant_admin' and user.restaurant:
+            # Get orders that contain products from their restaurant
+            return Order.objects.filter(
+                items__product__restaurant=user.restaurant
+            ).distinct()
+        
+        # Staff sees orders for their restaurant
+        elif user.role == 'staff' and user.restaurant:
+            return Order.objects.filter(
+                items__product__restaurant=user.restaurant
+            ).distinct()
+        
+        # Regular users see only their own orders
+        else:
+            return Order.objects.filter(user=user)
 
     def get_serializer_class(self):
         if self.action == 'create':

@@ -68,3 +68,4 @@ class Command(BaseCommand):
                 self.stdout.write('💡 Connection error - check EMAIL_HOST and EMAIL_PORT')
             else:
                 self.stdout.write(f'💡 Check Resend dashboard for more details')
+
